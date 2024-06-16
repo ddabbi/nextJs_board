@@ -23,3 +23,5 @@ export default async function Home() {
 
 // app폴더가 'http://localhost:3000/'기본경로
 // http://localhost:3000/list --> app폴더에 list폴더 만들고 page.js (nextJs는 폴더기반으로 만들어짐)
+
+// build폴더의 내용을 클라우드에(AWS, vercel) 업로드하고 npm run start
