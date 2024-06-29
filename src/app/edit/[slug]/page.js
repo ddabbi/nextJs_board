@@ -1,37 +1,44 @@
-/* id를 받아와서 그 아이디로 DB에서 검색해서 보여주기
-   기존의 내용을 먼저 보여주기
-   수정하기 버튼을 누르면 수정하는 페이지로 POST요청 */
-
-import { connectDB } from "@/util/db";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { connectDB } from "@/util/db"
 import { ObjectId } from "mongodb";
+import { getServerSession } from "next-auth";
 
-export default async function EditPage({params}){
-    // {params} : 동적 URL의 값을 받아오기 위해
-    //params.slug : edit/ 뒤에 입력한 URL
-    console.log(params.slug); 
-    // params.slug를 사용해서 DB에서 검색을 하고
-    // input의 기본값에 셋팅한다
-    const db = (await connectDB).db("mydb");    
-    let result = await db.collection("post").findOne({_id:ObjectId.createFromHexString(params.slug)});
-    // mongoDB에서 제공하는 api함수
-    // find().toArray() : 전체 다 가져오기
-    // fineOne() : 하나만 가져오기
-    console.log(result);
+export default async function Edit({params})
+{
+    console.log(params)
+    let session = await getServerSession(authOptions);
+    
+    if(session){
+        const db = (await connectDB).db('mydb');
+        let result = await db.collection('post').findOne({_id:ObjectId.createFromHexString(params.slug)})
+        console.log(result)
+    
+        if(session.user?.email === result.email || session.user?.email === 'myadminaccount@admin.com'){
+            // _id 필드를 문자열로 변환해서 사용할 것
+            const resultIdString = result._id.toString();
+        
+            return(
+                <div className="p-20">
+                    <h4>수정페이지</h4>
+                    <form action="/api/post/edit" method="POST">
+                        <input type="hidden" name="id" value={resultIdString} />
+                        <input name="title" placeholder="글제목" defaultValue={result.title}/>
+                        <input name="content" placeholder="글내용" defaultValue={result.content}/>
+                        <button type="submit">수정하기</button>
+                    </form>
+                </div>
+            )
+        }else{
+            return(
+                <div>글수정은 작성자만 가능합니다</div>
+            )
+        }
+    }else{
+        return(
+            <div>로그인이 필요해요</div>
+        )
+    }
 
-    return(
-        <div className="write-container">
-            <h4>수정페이지</h4>
-            <form action="/api/post/edit" method="POST">
-                <input type="hidden" name="id" defaultValue={result._id}/>
-                <input name="title" placeholder="글제목" defaultValue={result.title}/>
-                <input name="content" placeholder="글내용" defaultValue={result.content}/>
-                <button type="submit">수정하기</button>
-            </form>
-        </div>
-    )    
 }
 
-// GET : 받아올때
-// POST : 입력할때(또는 너무 길게 받아올때)
-// input 태그의 name이 key값이 됨 (서버에서 받는 키값)
-// id : '입력값0' title: '입력값1', content:'입력값2'
+// 수정하기 버튼을 누르면 action에 해당하는 URL에 요청을 보내게 되어있음

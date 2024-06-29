@@ -1,25 +1,32 @@
-'use client'
+'use client';
 
-// onClick, fetch, useStaet: 'use client'
-
-import './LoginBtn.css';
 import {signIn, signOut, useSession} from 'next-auth/react';
+import './LoginBtn.css';
+import Link from 'next/link';
 
-export default function LoignBtn({login}){
-    console.log(login);
+// onClick과 useState 등은 'use client' 에서만 사용 가능
+export default function LoginBtn({login})
+{
     return(
         <>
             {
-                login ? (
-                    <>
-                        <button onClick={() => {signIn()}}>로그아웃</button>
-                        <span>{login.user.name}</span>
-                    </>
+                !login ? (
+                    <button onClick={()=>{signIn()}} className='login-btn'>로그인</button>
                 ) : (
-                    <button onClick={() => {signOut()}}>로그인</button>
+                    <button onClick={()=>{signOut()}} className='login-btn'>로그아웃</button>
                 )
             }
             
+            {
+                !login ? (
+                    <Link href='/register' className='user-signup'>회원가입</Link>
+                ) : (
+                    <span className='login-name'>{login?.user?.name}</span>
+                )
+            }
         </>
     )
 }
+
+// signIn : 로그인
+// signOut : 로그아웃

@@ -1,23 +1,36 @@
 import { connectDB } from "@/util/db";
 import { ObjectId } from "mongodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 
-// /api/delete/list_item 으로 요청이 들어오면 동작할 함수
-export default async function handler(req, res){
-    console.log(req.body);
-    let {id} = req.body;
 
-    if(req.method == "DELETE"){
-        try {
-            const db = (await connectDB).db("mydb");          // await을 쓰려면 async function이여야함
-            let result = await db.collection("post").deleteOne({_id: ObjectId.createFromHexString(id)});
-            res.status(200).json({mag:'삭제완료'});
-        } catch (error) {
-            //서버기능 오류
-            res.status(500).json({msg: '서버기능오류' + error});
+export default async function listItemHandler(req, res)
+{
+    console.log("받은정보: ",req.body);
+    if(req.method == 'DELETE')
+    {
+        try{
+            let session = await getServerSession(req, res, authOptions);
+
+            const {id, email} = req.body;
+            const sessionEmail = session?.user?.email;
+            
+            if(sessionEmail === email || sessionEmail === 'myadminaccount@admin.com'){
+                const db = (await connectDB).db('mydb');
+                let result = await db.collection('post').deleteOne(
+                    {
+                        _id: ObjectId.createFromHexString(id),
+                    }
+                );
+                 console.log(result);
+                res.status(200).json('삭제완료');
+            }else{
+                res.status(400).json({error:'계정 정보가 일치하지 않습니다'});
+            }
+        }catch(error){
+            console.error('Database error:', error);
+            res.status(500).json({ error: 'Database Error' });
         }
-    }else{
-        res.status(405).json({mag:'DELETE요청만 처리합니다'});
-        
     }
 }
 // 몽고DB API함수(제공해주는 함수)

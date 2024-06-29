@@ -1,7 +1,7 @@
 import {MongoClient} from "mongodb";
 
 const url = "mongodb+srv://admin:admin@cluster0.ggeylyc.mongodb.net/";
-const options = {useNewUrlParser: true, useUnifiedTopology: true};
+const options = {};
 let connectDB;
 
 if(process.env.NODE_ENV === "development"){
